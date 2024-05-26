@@ -6,6 +6,8 @@ mod db;
 async fn main() -> std::io::Result<()> {
     let pool = db::connection::establish_pooled_connection();
 
+    db::migrations::run_migrations(&mut pool.get().unwrap());
+
     HttpServer::new(move || {
         App::new()
             .app_data(web::Data::new(pool.clone()))
