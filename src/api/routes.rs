@@ -1,13 +1,16 @@
-use crate::api::handlers::{create_set, get_set_by_id, get_sets};
+use crate::api::handlers::{
+    create_dictionary, delete_dictionary, get_dictionaries, get_dictionary_by_id,
+};
 use actix_web::web::{self};
 
 pub fn init_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(
         web::scope("/api").service(
-            web::scope("/sets")
-                .route("", web::get().to(get_sets))
-                .route("", web::post().to(create_set))
-                .route("{id}", web::get().to(get_set_by_id)),
+            web::scope("/dictionaries")
+                .route("", web::get().to(get_dictionaries))
+                .route("", web::post().to(create_dictionary))
+                .route("{id}", web::get().to(get_dictionary_by_id))
+                .route("{id}", web::delete().to(delete_dictionary)),
         ),
     );
 }

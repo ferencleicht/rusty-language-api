@@ -1,53 +1,88 @@
 use crate::db::connection::DbPool;
-use crate::db::models::{NewStudySet, StudySet};
-use crate::db::schema::study_sets::dsl::*;
+use crate::db::models::{Dictionary, NewDictionary};
+use crate::db::schema::dictionaries::dsl::*;
 use actix_web::{web, HttpResponse, Responder};
 use diesel::prelude::*;
 use diesel::result::Error;
 use log::error;
 
-pub async fn get_sets(pool: web::Data<DbPool>) -> impl Responder {
+#[utoipa::path(
+    get,
+    path = "/api/dictionaries",
+    responses(
+        (status = 200, description = "Dictionaries found successfully", body = Vec<Dictionary>),
+        (status = INTERNAL_SERVER_ERROR, description = "Internal server error")
+    )
+)]
+pub async fn get_dictionaries(pool: web::Data<DbPool>) -> impl Responder {
     let mut conn = pool.get().expect("Couldn't get db connection from pool");
 
-    match study_sets.load::<StudySet>(&mut conn) {
+    match dictionaries.load::<Dictionary>(&mut conn) {
         Ok(results) => HttpResponse::Ok().json(results),
         Err(err) => {
-            error!("Error querying sets: {:?}", err);
+            error!("Error querying dictionaries: {:?}", err);
             HttpResponse::InternalServerError().finish()
         }
     }
 }
 
-pub async fn get_set_by_id(pool: web::Data<DbPool>, path: web::Path<i32>) -> impl Responder {
+#[utoipa::path(
+    get,
+    path = "/api/dictionaries/{id}",
+    responses(
+        (status = 200, description = "Dictionary found successfully", body = Dictionary),
+        (status = NOT_FOUND, description = "Dictionary not found", body = String),
+        (status = INTERNAL_SERVER_ERROR, description = "Internal server error")
+    ),
+    params(
+        ("id" = i32, Path, description = "The id of the dictionary")
+    )
+)]
+pub async fn get_dictionary_by_id(pool: web::Data<DbPool>, path: web::Path<i32>) -> impl Responder {
     let mut conn = pool.get().expect("Couldn't get db connection from pool");
 
     let _id = path.into_inner();
 
-    match study_sets.find(_id).first::<StudySet>(&mut conn) {
+    match dictionaries.find(_id).first::<Dictionary>(&mut conn) {
         Ok(result) => HttpResponse::Ok().json(result),
-        Err(Error::NotFound) => {
-            HttpResponse::NotFound().json("Set not found with id: ".to_string() + &_id.to_string())
-        }
+        Err(Error::NotFound) => HttpResponse::NotFound()
+            .json("Dictionary not found with id: ".to_string() + &_id.to_string()),
         Err(err) => {
-            error!("Error querying set by id: {:?}", err);
+            error!("Error querying dictionary by id: {:?}", err);
             HttpResponse::InternalServerError().finish()
         }
     }
 }
 
-pub async fn create_set(
+pub async fn create_dictionary(
     pool: web::Data<DbPool>,
-    new_set: web::Json<NewStudySet>,
+    new_dictionary: web::Json<NewDictionary>,
 ) -> impl Responder {
     let mut conn = pool.get().expect("Couldn't get db connection from pool");
 
-    match diesel::insert_into(study_sets)
-        .values(new_set.into_inner())
-        .get_result::<StudySet>(&mut conn)
+    match diesel::insert_into(dictionaries)
+        .values(new_dictionary.into_inner())
+        .get_result::<Dictionary>(&mut conn)
     {
-        Ok(result) => HttpResponse::Ok().json(result),
+        Ok(result) => HttpResponse::Created().json(result),
         Err(err) => {
-            error!("Error creating set: {:?}", err);
+            error!("Error creating dictionary: {:?}", err);
+            HttpResponse::InternalServerError().finish()
+        }
+    }
+}
+
+pub async fn delete_dictionary(pool: web::Data<DbPool>, path: web::Path<i32>) -> impl Responder {
+    let mut conn = pool.get().expect("Couldn't get db connection from pool");
+
+    let _id = path.into_inner();
+
+    match diesel::delete(dictionaries.find(_id)).execute(&mut conn) {
+        Ok(_) => HttpResponse::NoContent().finish(),
+        Err(Error::NotFound) => HttpResponse::NotFound()
+            .json("Dictionary not found with id: ".to_string() + &_id.to_string()),
+        Err(err) => {
+            error!("Error deleting dictionary: {:?}", err);
             HttpResponse::InternalServerError().finish()
         }
     }
