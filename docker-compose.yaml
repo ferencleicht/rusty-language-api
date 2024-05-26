@@ -8,6 +8,8 @@ services:
       POSTGRES_PASSWORD: postgres
     ports:
       - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
 
   api:
     build:
@@ -20,3 +22,6 @@ services:
       - "8080:8080"
     env_file:
       - .env
+
+volumes:
+  db-data:
