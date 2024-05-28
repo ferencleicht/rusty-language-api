@@ -8,7 +8,8 @@ use log::error;
 
 #[utoipa::path(
     get,
-    path = "/api/dictionaries",
+    path = "/api/v1/dictionaries",
+    tag = "Dictionaries",
     responses(
         (status = 200, description = "Dictionaries found successfully", body = Vec<Dictionary>),
         (status = INTERNAL_SERVER_ERROR, description = "Internal server error")
@@ -28,7 +29,8 @@ pub async fn get_dictionaries(pool: web::Data<DbPool>) -> impl Responder {
 
 #[utoipa::path(
     get,
-    path = "/api/dictionaries/{id}",
+    path = "/api/v1/dictionaries/{id}",
+    tag = "Dictionaries",
     responses(
         (status = 200, description = "Dictionary found successfully", body = Dictionary),
         (status = NOT_FOUND, description = "Dictionary not found", body = String),
@@ -54,6 +56,16 @@ pub async fn get_dictionary_by_id(pool: web::Data<DbPool>, path: web::Path<i32>)
     }
 }
 
+#[utoipa::path(
+    post,
+    path = "/api/v1/dictionaries",
+    tag = "Dictionaries",
+    request_body(content = NewDictionary, description = "The new dictionary to create", content_type = "application/json"),
+    responses(
+        (status = 201, description = "Dictionary created successfully", body = Dictionary),
+        (status = INTERNAL_SERVER_ERROR, description = "Internal server error")
+    )
+)]
 pub async fn create_dictionary(
     pool: web::Data<DbPool>,
     new_dictionary: web::Json<NewDictionary>,
@@ -72,6 +84,19 @@ pub async fn create_dictionary(
     }
 }
 
+#[utoipa::path(
+    delete,
+    path = "/api/v1/dictionaries/{id}",
+    tag = "Dictionaries",
+    responses(
+        (status = 204, description = "Dictionary deleted successfully"),
+        (status = NOT_FOUND, description = "Dictionary not found", body = String),
+        (status = INTERNAL_SERVER_ERROR, description = "Internal server error")
+    ),
+    params(
+        ("id" = i32, Path, description = "The id of the dictionary to delete")
+    )
+)]
 pub async fn delete_dictionary(pool: web::Data<DbPool>, path: web::Path<i32>) -> impl Responder {
     let mut conn = pool.get().expect("Couldn't get db connection from pool");
 
