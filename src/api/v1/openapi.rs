@@ -2,7 +2,7 @@ use serde::Deserialize;
 use utoipa::OpenApi;
 
 use crate::api::v1::handlers;
-use crate::db::models::Dictionary;
+use crate::db::models::{Dictionary, NewDictionary};
 
 #[derive(OpenApi, Deserialize)]
 #[openapi(
@@ -12,6 +12,6 @@ use crate::db::models::Dictionary;
         handlers::create_dictionary,
         handlers::delete_dictionary
     ),
-    components(schemas(Dictionary))
+    components(schemas(Dictionary, NewDictionary))
 )]
 pub struct ApiDoc;

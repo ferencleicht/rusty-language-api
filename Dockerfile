@@ -1,7 +1,7 @@
 FROM rust:1.78.0-slim as builder
 
 # Install system dependencies required for Diesel
-RUN apt-get update && apt-get install -y libpq-dev && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y libpq-dev curl && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
@@ -20,8 +20,8 @@ WORKDIR /app
 RUN apt-get update -y && apt-get install -y libpq-dev && rm -rf /var/lib/apt/lists/*
 
 # Copy the built binary from the builder image
-COPY --from=builder /app/target/release/rusty .
+COPY --from=builder /app/target/release/rusty-language-api .
 
 EXPOSE 8080
 
-CMD ["./rusty"]
+CMD ["./rusty-language-api"]
